@@ -15,13 +15,13 @@ async def test_issue_access_denied_for_non_member():
         unique_key = f"PERM_{uuid.uuid4().hex[:6]}"
 
         # Create owner
-        await ac.post("/api/v1/auth/signup", json={
+        await ac.post("/api/auth/signup", json={
             "name": "Owner",
             "email": owner_email,
             "password": "password123"
         })
 
-        login_owner = await ac.post("/api/v1/auth/login", data={
+        login_owner = await ac.post("/api/auth/login", data={
             "username": owner_email,
             "password": "password123"
         })
@@ -30,7 +30,7 @@ async def test_issue_access_denied_for_non_member():
 
         # Create project
         project = await ac.post(
-            "/api/v1/projects/",
+            "/api/projects/",
             headers={"Authorization": f"Bearer {owner_token}"},
             json={
                 "name": "Permission Project",
@@ -43,13 +43,13 @@ async def test_issue_access_denied_for_non_member():
         project_id = project.json()["id"]
 
         # Create stranger
-        await ac.post("/api/v1/auth/signup", json={
+        await ac.post("/api/auth/signup", json={
             "name": "Stranger",
             "email": stranger_email,
             "password": "password123"
         })
 
-        login_stranger = await ac.post("/api/v1/auth/login", data={
+        login_stranger = await ac.post("/api/auth/login", data={
             "username": stranger_email,
             "password": "password123"
         })
@@ -58,8 +58,10 @@ async def test_issue_access_denied_for_non_member():
 
         # Stranger tries to access issues
         response = await ac.get(
-            f"/api/v1/projects/{project_id}/issues",
+            f"/api/projects/{project_id}/issues",
             headers={"Authorization": f"Bearer {stranger_token}"}
         )
 
         assert response.status_code == 403
+
+

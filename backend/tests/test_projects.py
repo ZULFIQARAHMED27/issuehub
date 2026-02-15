@@ -11,7 +11,7 @@ async def test_create_project_requires_auth():
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
 
         response = await ac.post(
-            "/api/v1/projects/",
+            "/api/projects/",
             json={
                 "name": "Test Project",
                 "key": f"TP_{uuid.uuid4().hex[:6]}",
@@ -33,7 +33,7 @@ async def test_create_project_success():
 
         # Signup
         await ac.post(
-            "/api/v1/auth/signup",
+            "/api/auth/signup",
             json={
                 "name": "Project User",
                 "email": unique_email,
@@ -43,7 +43,7 @@ async def test_create_project_success():
 
         # Login
         login = await ac.post(
-            "/api/v1/auth/login",
+            "/api/auth/login",
             data={
                 "username": unique_email,
                 "password": "password123"
@@ -54,7 +54,7 @@ async def test_create_project_success():
 
         # Create project
         response = await ac.post(
-            "/api/v1/projects/",
+            "/api/projects/",
             headers={"Authorization": f"Bearer {token}"},
             json={
                 "name": "Test Project",
@@ -77,7 +77,7 @@ async def test_delete_project_success_for_maintainer():
         unique_key = f"DEL_{uuid.uuid4().hex[:6]}"
 
         await ac.post(
-            "/api/v1/auth/signup",
+            "/api/auth/signup",
             json={
                 "name": "Project User",
                 "email": unique_email,
@@ -86,7 +86,7 @@ async def test_delete_project_success_for_maintainer():
         )
 
         login = await ac.post(
-            "/api/v1/auth/login",
+            "/api/auth/login",
             data={
                 "username": unique_email,
                 "password": "password123"
@@ -96,7 +96,7 @@ async def test_delete_project_success_for_maintainer():
         token = login.json()["access_token"]
 
         project = await ac.post(
-            "/api/v1/projects/",
+            "/api/projects/",
             headers={"Authorization": f"Bearer {token}"},
             json={
                 "name": "Delete Project",
@@ -107,7 +107,7 @@ async def test_delete_project_success_for_maintainer():
         project_id = project.json()["id"]
 
         delete_response = await ac.delete(
-            f"/api/v1/projects/{project_id}",
+            f"/api/projects/{project_id}",
             headers={"Authorization": f"Bearer {token}"}
         )
 
@@ -124,7 +124,7 @@ async def test_delete_project_forbidden_for_member():
         key = f"DELM_{uuid.uuid4().hex[:6]}"
 
         await ac.post(
-            "/api/v1/auth/signup",
+            "/api/auth/signup",
             json={
                 "name": "Owner",
                 "email": owner_email,
@@ -132,7 +132,7 @@ async def test_delete_project_forbidden_for_member():
             },
         )
         await ac.post(
-            "/api/v1/auth/signup",
+            "/api/auth/signup",
             json={
                 "name": "Member",
                 "email": member_email,
@@ -141,14 +141,14 @@ async def test_delete_project_forbidden_for_member():
         )
 
         owner_login = await ac.post(
-            "/api/v1/auth/login",
+            "/api/auth/login",
             data={
                 "username": owner_email,
                 "password": "password123"
             },
         )
         member_login = await ac.post(
-            "/api/v1/auth/login",
+            "/api/auth/login",
             data={
                 "username": member_email,
                 "password": "password123"
@@ -159,7 +159,7 @@ async def test_delete_project_forbidden_for_member():
         member_token = member_login.json()["access_token"]
 
         project = await ac.post(
-            "/api/v1/projects/",
+            "/api/projects/",
             headers={"Authorization": f"Bearer {owner_token}"},
             json={
                 "name": "Delete Project Member",
@@ -170,15 +170,17 @@ async def test_delete_project_forbidden_for_member():
         project_id = project.json()["id"]
 
         add_member = await ac.post(
-            f"/api/v1/projects/{project_id}/members",
+            f"/api/projects/{project_id}/members",
             headers={"Authorization": f"Bearer {owner_token}"},
             json={"email": member_email, "role": "member"},
         )
         assert add_member.status_code == 200
 
         delete_response = await ac.delete(
-            f"/api/v1/projects/{project_id}",
+            f"/api/projects/{project_id}",
             headers={"Authorization": f"Bearer {member_token}"}
         )
 
         assert delete_response.status_code == 403
+
+

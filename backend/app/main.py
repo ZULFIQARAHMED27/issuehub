@@ -71,13 +71,9 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 # -------------------------
-# API Versioned Routers
+# API Routers
 # -------------------------
 
-app.include_router(auth_router, prefix="/api/v1/auth", tags=["Auth"])
-app.include_router(projects_router, prefix="/api/v1/projects", tags=["Projects"])
-app.include_router(issues_router, prefix="/api/v1", tags=["Issues"])
-app.include_router(comments_router, prefix="/api/v1", tags=["Comments"])
 app.include_router(auth_router, prefix="/api/auth", tags=["Auth"])
 app.include_router(projects_router, prefix="/api/projects", tags=["Projects"])
 app.include_router(issues_router, prefix="/api", tags=["Issues"])

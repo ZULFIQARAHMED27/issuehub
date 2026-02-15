@@ -175,9 +175,6 @@ python -m pytest backend/tests -q
 Primary API base in frontend is:
 - `/api/...`
 
-Versioned aliases are also available:
-- `/api/v1/...`
-
 Contract compatibility highlights:
 - `POST /api/auth/signup` -> JSON `{name,email,password}`
 - `POST /api/auth/login` -> supports JSON `{email,password}` and form login
@@ -221,7 +218,7 @@ Demo credentials:
 
 Trade-offs:
 - Kept implementation minimal and assignment-focused rather than adding heavy infrastructure.
-- Chose compatibility paths (`/api` and `/api/v1`) to preserve existing clients while matching assignment examples.
+- Chose assignment-aligned `/api` contract for cleaner API surface and Swagger docs.
 
 ## Known Limitations and Future Improvements
 
@@ -236,4 +233,3 @@ Trade-offs:
 
 - Live deployment URL (optional).
 - Demo walkthrough video (optional).
-

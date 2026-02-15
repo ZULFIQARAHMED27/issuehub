@@ -11,7 +11,7 @@ async def test_create_project_requires_auth():
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
 
         response = await ac.post(
-            "/api/v1/projects/",
+            "/api/projects/",
             json={
                 "name": "Test Project",
                 "key": f"TP_{uuid.uuid4().hex[:6]}",
@@ -33,7 +33,7 @@ async def test_create_project_success():
 
         # Signup
         await ac.post(
-            "/api/v1/auth/signup",
+            "/api/auth/signup",
             json={
                 "name": "Project User",
                 "email": unique_email,
@@ -43,7 +43,7 @@ async def test_create_project_success():
 
         # Login
         login = await ac.post(
-            "/api/v1/auth/login",
+            "/api/auth/login",
             data={
                 "username": unique_email,
                 "password": "password123"
@@ -54,7 +54,7 @@ async def test_create_project_success():
 
         # Create project
         response = await ac.post(
-            "/api/v1/projects/",
+            "/api/projects/",
             headers={"Authorization": f"Bearer {token}"},
             json={
                 "name": "Test Project",
@@ -66,3 +66,5 @@ async def test_create_project_success():
         assert response.status_code == 200
         data = response.json()
         assert data["name"] == "Test Project"
+
+
