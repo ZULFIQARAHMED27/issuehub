@@ -12,6 +12,7 @@ export default function Login() {
   });
 
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const handleChange = (e) => {
     setForm({
@@ -23,6 +24,7 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setSubmitting(true);
 
     try {
       const response = await api.post(
@@ -55,6 +57,8 @@ export default function Login() {
       } else {
         setError(err.response?.data?.error?.message || "Login failed.");
       }
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -112,7 +116,9 @@ export default function Login() {
         />
         <br /><br />
 
-        <button type="submit">Login</button>
+        <button type="submit" disabled={submitting}>
+          {submitting ? "Logging in..." : "Login"}
+        </button>
       </form>
 
       {error && <p style={{ color: "red", marginBottom: 0 }}>{error}</p>}
