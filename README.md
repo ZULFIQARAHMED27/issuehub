@@ -243,8 +243,3 @@ Trade-offs:
 - Test suite can be expanded further for edge-case and frontend coverage.
 - Sorting by enum fields uses DB enum ordering; custom explicit semantic ordering could be refined further.
 - Observability (structured logs/metrics/tracing) is minimal.
-
-## Optional Submission Add-ons
-
-- Live deployment URL (optional).
-- Demo walkthrough video (optional).
