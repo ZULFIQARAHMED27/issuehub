@@ -9,6 +9,15 @@ It supports:
 - comments and issue status tracking
 - filtering/search/sorting/pagination
 
+## Live Deployment
+
+This project is deployed and running in production:
+- Backend (Render): `https://issuehub-jedu.onrender.com`
+- Frontend (Vercel): `https://issuehub-git-main-syed-zulfiqars-projects.vercel.app/`
+
+Backend API docs (live):
+- `https://issuehub-jedu.onrender.com/docs`
+
 ## Assignment Requirement Coverage
 
 ### Core MVP
@@ -205,7 +214,7 @@ It is idempotent, so re-running seed does not create duplicates for the same rec
 
 Demo credentials:
 - `ali@test.com / password123`
-- `zulfiqar@test.com / 123456`
+- `zulfiqar@test.com / password123`
 - `ayesha@test.com / password123`
 - `rahul@test.com / password123`
 
