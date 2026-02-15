@@ -169,6 +169,11 @@ npm install
 npm run dev
 ```
 
+Create `frontend/.env`:
+```env
+VITE_API_BASE_URL=http://127.0.0.1:8000/api
+```
+
 Frontend URL:
 - `http://localhost:5173`
 
@@ -187,6 +192,7 @@ Primary API base in frontend is:
 Contract compatibility highlights:
 - `POST /api/auth/signup` -> JSON `{name,email,password}`
 - `POST /api/auth/login` -> supports JSON `{email,password}` and form login
+- `POST /api/auth/logout` -> authenticated logout acknowledgment for client token cleanup
 - `GET /api/me` -> current user profile
 - `GET /api/projects/{id}/issues` supports `assignee` (and also `assignee_id` for compatibility)
 

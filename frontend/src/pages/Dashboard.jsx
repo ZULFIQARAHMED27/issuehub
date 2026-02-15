@@ -31,7 +31,7 @@ export default function Dashboard() {
       setLoading(true);
       const [projectsRes, meRes] = await Promise.all([
         api.get("/projects"),
-        api.get("/auth/me")
+        api.get("/me")
       ]);
       setProjects(projectsRes.data);
       setCurrentUser(meRes.data);
@@ -76,9 +76,15 @@ export default function Dashboard() {
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem("token");
-    navigate("/login");
+  const logout = async () => {
+    try {
+      await api.post("/auth/logout");
+    } catch {
+      // Continue client logout even if API logout fails.
+    } finally {
+      localStorage.removeItem("token");
+      navigate("/login");
+    }
   };
 
   return (
