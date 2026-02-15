@@ -6,10 +6,23 @@ from app.schemas.issue import IssueCreate, IssueUpdate
 from app.services.common import role_value
 
 
+def _validate_assignee(db: Session, project_id: int, assignee_id: int):
+    assignee = issues_dao.get_user_by_id(db, assignee_id)
+    if not assignee:
+        raise HTTPException(status_code=400, detail="Assignee user not found")
+
+    assignee_membership = issues_dao.get_project_membership(db, project_id, assignee_id)
+    if not assignee_membership:
+        raise HTTPException(status_code=400, detail="Assignee must be a project member")
+
+
 def create_issue(db: Session, project_id: int, payload: IssueCreate, current_user_id: int):
     membership = issues_dao.get_project_membership(db, project_id, current_user_id)
     if not membership:
         raise HTTPException(status_code=403, detail="Not a member of this project")
+
+    if payload.assignee_id is not None:
+        _validate_assignee(db, project_id, payload.assignee_id)
 
     issue = issues_dao.create_issue(
         db,
@@ -103,6 +116,8 @@ def update_issue(db: Session, issue_id: int, payload: IssueUpdate, current_user_
     if "assignee_id" in payload.model_fields_set:
         if not is_maintainer:
             raise HTTPException(status_code=403, detail="Only maintainer can assign issues")
+        if payload.assignee_id is not None:
+            _validate_assignee(db, issue.project_id, payload.assignee_id)
         issue.assignee_id = payload.assignee_id
 
     issues_dao.commit_issue(db, issue)

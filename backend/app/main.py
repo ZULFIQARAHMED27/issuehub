@@ -3,9 +3,6 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.db.base import Base
-from app.db.session import engine
-
 from app.api.auth import router as auth_router
 from app.api.projects import router as projects_router
 from app.api.issues import router as issues_router
@@ -88,12 +85,6 @@ def me_alias(
 ):
     return auth_service.me(db, current_user.id, current_user.name, current_user.email)
 
-
-# -------------------------
-# Database Tables (Dev Only)
-# -------------------------
-
-Base.metadata.create_all(bind=engine)
 
 # -------------------------
 # Root Health Check

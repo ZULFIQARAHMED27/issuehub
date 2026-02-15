@@ -16,6 +16,7 @@ export default function IssueDetail() {
   const [toast, setToast] = useState(null);
   const [submittingComment, setSubmittingComment] = useState(false);
   const [savingMeta, setSavingMeta] = useState(false);
+  const [initialLoadFailed, setInitialLoadFailed] = useState(false);
   const [editForm, setEditForm] = useState({
     title: "",
     description: "",
@@ -34,29 +35,56 @@ export default function IssueDetail() {
     setTimeout(() => setToast(null), 3000);
   };
 
+  const handleApiError = (err, fallbackMessage) => {
+    if (err.response?.status === 401) {
+      localStorage.removeItem("token");
+      navigate("/login");
+      return;
+    }
+    showToast(err.response?.data?.error?.message || fallbackMessage, "error");
+  };
+
   const fetchIssue = async () => {
-    const res = await api.get(`/issues/${issueId}`);
-    setIssue(res.data);
-    setEditForm({
-      title: res.data.title || "",
-      description: res.data.description || "",
-      priority: res.data.priority || "medium"
-    });
+    try {
+      const res = await api.get(`/issues/${issueId}`);
+      setIssue(res.data);
+      setEditForm({
+        title: res.data.title || "",
+        description: res.data.description || "",
+        priority: res.data.priority || "medium"
+      });
+      setInitialLoadFailed(false);
+    } catch (err) {
+      setInitialLoadFailed(true);
+      handleApiError(err, "Failed to load issue");
+    }
   };
 
   const fetchComments = async () => {
-    const res = await api.get(`/issues/${issueId}/comments`);
-    setComments(res.data);
+    try {
+      const res = await api.get(`/issues/${issueId}/comments`);
+      setComments(res.data);
+    } catch (err) {
+      handleApiError(err, "Failed to load comments");
+    }
   };
 
   const fetchMembers = async () => {
-    const res = await api.get(`/projects/${projectId}/members`);
-    setMembers(res.data);
+    try {
+      const res = await api.get(`/projects/${projectId}/members`);
+      setMembers(res.data);
+    } catch (err) {
+      handleApiError(err, "Failed to load members");
+    }
   };
 
   const fetchMe = async () => {
-    const res = await api.get("/me");
-    setCurrentUser(res.data);
+    try {
+      const res = await api.get("/me");
+      setCurrentUser(res.data);
+    } catch (err) {
+      handleApiError(err, "Failed to load current user");
+    }
   };
 
   const normalizeRole = (role) => {
@@ -157,6 +185,9 @@ export default function IssueDetail() {
   };
 
   if (!issue) {
+    if (initialLoadFailed) {
+      return <p>Unable to load issue right now. Please try again.</p>;
+    }
     return (
       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
         <span className="spinner" />

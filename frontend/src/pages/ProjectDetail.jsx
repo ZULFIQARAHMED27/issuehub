@@ -59,19 +59,36 @@ export default function ProjectDetail() {
     setTimeout(() => setToast(null), 3000);
   };
 
+  const handleApiError = (err, fallbackMessage) => {
+    if (err.response?.status === 401) {
+      localStorage.removeItem("token");
+      navigate("/login");
+      return;
+    }
+    showToast(err.response?.data?.error?.message || fallbackMessage, "error");
+  };
+
   useEffect(() => {
     fetchIssues();
   }, [page, filters]);
 
   const fetchProject = async () => {
-    const res = await api.get("/projects");
-    const found = res.data.find((p) => p.id === parseInt(id));
-    setProject(found);
+    try {
+      const res = await api.get("/projects");
+      const found = res.data.find((p) => p.id === parseInt(id));
+      setProject(found || null);
+    } catch (err) {
+      handleApiError(err, "Failed to load project");
+    }
   };
 
   const fetchMembers = async () => {
-    const res = await api.get(`/projects/${id}/members`);
-    setMembers(res.data);
+    try {
+      const res = await api.get(`/projects/${id}/members`);
+      setMembers(res.data);
+    } catch (err) {
+      handleApiError(err, "Failed to load members");
+    }
   };
 
   const fetchIssues = async () => {
@@ -91,6 +108,8 @@ export default function ProjectDetail() {
       const res = await api.get(`/projects/${id}/issues?${params.toString()}`);
       setIssues(res.data.data);
       setTotal(res.data.total);
+    } catch (err) {
+      handleApiError(err, "Failed to load issues");
     } finally {
       setLoading(false);
     }
