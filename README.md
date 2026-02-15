@@ -149,6 +149,10 @@ Run migrations:
 alembic upgrade head
 ```
 
+Important:
+- Schema is migration-driven in all environments.
+- Do not rely on runtime table auto-creation; always run Alembic migrations before starting the API.
+
 Seed demo data:
 ```bash
 python seed.py
@@ -174,6 +178,10 @@ Create `frontend/.env`:
 VITE_API_BASE_URL=http://127.0.0.1:8000/api
 ```
 
+Production note:
+- Set `VITE_API_BASE_URL` in Vercel to your Render API base (for example `https://issuehub-jedu.onrender.com/api`).
+- Frontend has local-vs-production fallback logic, but explicit env configuration is recommended.
+
 Frontend URL:
 - `http://localhost:5173`
 
@@ -195,6 +203,7 @@ Contract compatibility highlights:
 - `POST /api/auth/logout` -> authenticated logout acknowledgment for client token cleanup
 - `GET /api/me` -> current user profile
 - `GET /api/projects/{id}/issues` supports `assignee` (and also `assignee_id` for compatibility)
+- Issue create/update validates `assignee_id` (assignee must exist and belong to the project)
 
 Errors are structured as:
 ```json
@@ -243,3 +252,4 @@ Trade-offs:
 - Test suite can be expanded further for edge-case and frontend coverage.
 - Sorting by enum fields uses DB enum ordering; custom explicit semantic ordering could be refined further.
 - Observability (structured logs/metrics/tracing) is minimal.
+- Some list endpoints can be further optimized to reduce N+1 query patterns at scale.
