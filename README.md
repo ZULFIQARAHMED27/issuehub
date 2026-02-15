@@ -220,7 +220,7 @@ It is idempotent, so re-running seed does not create duplicates for the same rec
 
 Demo credentials:
 - `ali@test.com / password123`
-- `zulfiqar@test.com / 123456`
+- `zulfiqar@test.com / password123`
 - `ayesha@test.com / password123`
 - `rahul@test.com / password123`
 
