@@ -15,6 +15,7 @@ from app.models.user import User
 from sqlalchemy.orm import Session
 from app.services import auth_service
 
+
 # -------------------------
 # App Initialization
 # -------------------------
@@ -29,12 +30,6 @@ app = FastAPI(
 # CORS Configuration
 # -------------------------
 
-origins = [
-    "http://localhost:5173",
-    "https://issuehub-vert.vercel.app",
-    "https://issuehub-nodryofjs-syed-zulfiqars-projects.vercel.app",
-]
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -45,7 +40,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 # -------------------------
 # Structured Error Handling
@@ -93,6 +87,7 @@ def me_alias(
     db: Session = Depends(get_db)
 ):
     return auth_service.me(db, current_user.id, current_user.name, current_user.email)
+
 
 # -------------------------
 # Database Tables (Dev Only)
