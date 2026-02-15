@@ -46,7 +46,15 @@ export default function Login() {
 
     } catch (err) {
       console.error(err);
-      setError("Login failed. Please check credentials.");
+      if (err.response?.status === 401) {
+        setError("Invalid email or password.");
+      } else if (!err.response) {
+        setError("Server unreachable. Please try again shortly.");
+      } else if (err.response?.status >= 500) {
+        setError("Server error. Please try again shortly.");
+      } else {
+        setError(err.response?.data?.error?.message || "Login failed.");
+      }
     }
   };
 
