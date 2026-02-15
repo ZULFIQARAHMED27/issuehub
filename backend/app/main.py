@@ -29,13 +29,14 @@ app = FastAPI(
 # CORS Configuration
 # -------------------------
 
+origins = [
+    "http://localhost:5173",
+    "https://issuehub-vert.vercel.app",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "https://issuehub-vert.vercel.app",
-,
-    ],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
