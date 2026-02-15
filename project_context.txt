@@ -1,0 +1,577 @@
+# project_context.txt
+
+---
+
+# 1. HIGH-LEVEL PROJECT SUMMARY
+
+## Project Name
+
+IssueHub
+
+## Purpose
+
+IssueHub is a lightweight issue tracking system inspired by Jira-style workflows.
+It allows users to:
+
+* Create projects
+* Invite members
+* Create and manage issues
+* Assign issues
+* Update status and priority
+* Comment on issues
+
+It enforces role-based permissions (Member vs Maintainer).
+
+---
+
+## Tech Stack
+
+### Backend
+
+* Python 3.11
+* FastAPI
+* SQLAlchemy (ORM)
+* PostgreSQL
+* JWT Authentication
+* Pytest (tests)
+
+### Frontend
+
+* React (Vite)
+* Axios (API calls)
+* React Router
+* Local component state (no global state manager)
+
+### Database
+
+* PostgreSQL (primary)
+* SQLite supported for local dev
+
+---
+
+## Architecture Style
+
+* REST API (JSON)
+* Role-based access control
+* Token-based authentication (JWT Bearer)
+* Layered backend:
+
+  * Models
+  * Schemas
+  * API routes
+  * Dependencies
+
+---
+
+# 2. BACKEND OVERVIEW
+
+## Frameworks & Core Libraries
+
+* FastAPI (API layer)
+* SQLAlchemy (ORM)
+* Pydantic (validation)
+* Passlib (password hashing)
+* python-jose (JWT)
+* Pytest + httpx (testing)
+
+---
+
+## Backend Folder Structure (Simplified)
+
+backend/
+│
+├── app/
+│   ├── api/
+│   │   ├── auth.py
+│   │   ├── projects.py
+│   │   ├── issues.py
+│   │   └── comments.py
+│   │
+│   ├── core/
+│   │   ├── config.py
+│   │   ├── dependencies.py
+│   │   └── security.py
+│   │
+│   ├── db/
+│   │   ├── base.py
+│   │   └── session.py
+│   │
+│   ├── models/
+│   │   ├── user.py
+│   │   ├── project.py
+│   │   ├── project_member.py
+│   │   ├── issue.py
+│   │   └── comment.py
+│   │
+│   ├── schemas/
+│   │   ├── user.py
+│   │   ├── project.py
+│   │   └── issue.py
+│   │
+│   └── main.py
+│
+├── tests/
+├── seed.py
+├── requirements.txt
+└── README.md
+
+---
+
+## Key Models
+
+### User
+
+* id
+* name
+* email (unique)
+* password_hash
+* created_at
+
+### Project
+
+* id
+* name
+* key (unique)
+* description
+* created_at
+
+### ProjectMember
+
+* project_id
+* user_id
+* role (Enum: member | maintainer)
+
+### Issue
+
+* id
+* project_id
+* title
+* description
+* status (Enum: open | in_progress | resolved | closed)
+* priority (Enum: low | medium | high | critical)
+* reporter_id
+* assignee_id
+* created_at
+* updated_at (auto-updates on change)
+
+### Comment
+
+* id
+* issue_id
+* author_id
+* body
+* created_at
+
+---
+
+## Important API Endpoints
+
+Auth:
+
+* POST /api/v1/auth/signup
+* POST /api/v1/auth/login
+
+Projects:
+
+* POST /api/v1/projects/
+* GET /api/v1/projects/
+* DELETE /api/v1/projects/{id}
+* GET /api/v1/projects/{id}/members
+* POST /api/v1/projects/{id}/members
+
+Issues:
+
+* POST /api/v1/projects/{id}/issues
+* GET /api/v1/projects/{id}/issues
+* PATCH /api/v1/issues/{id}
+* DELETE /api/v1/issues/{id}
+* GET /api/v1/issues/{id}
+
+Comments:
+
+* POST /api/v1/issues/{id}/comments
+* GET /api/v1/issues/{id}/comments
+
+---
+
+## Authentication Mechanism
+
+* JWT-based authentication
+* Token returned on login
+* Token stored in frontend localStorage
+* Bearer token required for protected routes
+* Role enforcement handled in route logic
+
+---
+
+## Known Backend Fragile Areas
+
+* No DB-level constraints enforcing:
+
+  * assignee must belong to project
+* No soft deletes
+* No migration tool (Alembic not implemented)
+* Duplicate logic previously existed in issues.py (cleaned but risky)
+* Enum migrations require manual DB updates
+* No rate limiting
+* No transaction rollback safety beyond SQLAlchemy default
+
+---
+
+# 3. FRONTEND OVERVIEW
+
+## Framework
+
+* React (Vite)
+
+## State Management
+
+* useState
+* useEffect
+* No global state (Redux, Context, etc.)
+
+## API Integration
+
+* Axios instance
+* Base URL: /api/v1
+* Request interceptor attaches JWT
+
+---
+
+## Key Pages / Components
+
+Pages:
+
+* Signup.jsx
+* Login.jsx
+* Dashboard.jsx
+* ProjectDetail.jsx
+* IssueDetail.jsx
+
+Components:
+
+* IssueTable.jsx
+* StatusBadge.jsx
+* ProtectedRoute.jsx
+
+---
+
+## Core UI Features
+
+* Project creation
+* Member invite by email
+* Issue creation
+* Pagination
+* Filters (status, priority, search)
+* Status dropdown
+* Assignee dropdown
+* Delete confirmation
+* Basic empty states
+
+---
+
+## Known Frontend Issues
+
+* Members cannot change status of non-reported issues (correct per spec but confusing UX)
+* Unassign required explicit null handling
+* No optimistic UI updates
+* No loading skeletons
+* No role-based UI visibility (status dropdown visible even if forbidden)
+* No global error boundary
+* No refresh token handling
+
+---
+
+# 4. DATABASE OVERVIEW
+
+## Tables
+
+* users
+* projects
+* project_members
+* issues
+* comments
+
+---
+
+## Relationships
+
+User → ProjectMember (1:N)
+Project → ProjectMember (1:N)
+Project → Issue (1:N)
+Issue → Comment (1:N)
+User → Issue (reporter_id)
+User → Issue (assignee_id)
+
+---
+
+## Schema Improvements Made
+
+* Enum enforcement for:
+
+  * issue_status
+  * issue_priority
+  * project_member.role
+* Cascade delete comments when issue deleted
+* updated_at auto-updates
+
+---
+
+## Known Schema Limitations
+
+* No composite unique constraint on project_members
+* No foreign key check that assignee belongs to project
+* No migration history
+* No DB indexing strategy review
+
+---
+
+# 5. REQUIREMENTS MAPPING
+
+## Core Requirements
+
+Backend: Python (FastAPI preferred)
+✔ Completed
+
+DB: PostgreSQL with migrations
+⚠ Partially Completed
+(Postgres used, but no Alembic migrations)
+
+Frontend: React
+✔ Completed
+
+Auth: Email/password JWT
+✔ Completed
+
+Testing: Meaningful unit/integration tests
+✔ Completed (Auth, Project, Permission tests)
+
+Docs: Clear README
+✔ Completed
+
+API Style: REST + CORS
+✔ Completed
+
+---
+
+## User Roles
+
+User:
+
+* Create issues ✔
+* Read issues ✔
+* Update own issues ✔
+* Comment ✔
+* View project issues ✔
+
+Project Maintainer:
+
+* Update any issue ✔
+* Assign issues ✔
+* Close issues ✔
+* Manage membership ✔
+
+---
+
+## Entities & Schema
+
+Users table ✔
+Projects table ✔
+Project Members ✔
+Issues ✔
+Comments ✔
+
+Status enum enforced ✔
+Priority enum enforced ✔
+
+Matches spec ✔
+
+---
+
+# 6. CURRENT KNOWN ISSUES
+
+* No migrations
+* No environment separation (dev/prod)
+* No Docker setup
+* No CI pipeline
+* No audit logging
+* No pagination metadata in headers
+* Tests use real DB (not isolated test DB)
+* No DB transaction rollback per test
+* No performance indexing strategy
+* No frontend role-based UI restrictions
+
+---
+
+# 7. CLEANUP / REFACTOR NOTES
+
+* Introduce Alembic for proper migrations
+* Add composite unique constraint on project_members
+* Add role-based UI rendering (hide assign/status for unauthorized)
+* Add optimistic UI updates
+* Add loading states
+* Move business logic into service layer
+* Add test database isolation
+* Add Docker + docker-compose
+* Add structured logging
+
+---
+
+END OF PROJECT CONTEXT FILE
+
+---
+
+This file represents the authoritative architectural snapshot of the current IssueHub implementation.
+
+
+--- 
+
+Also Pasting Official Assignment document i received through mail below Kindly refer to it and check whether we implemented
+all the required features asked in it 
+
+Assignment requirements section -
+
+Assignment: IssueHub — a Lightweight Bug Tracker
+Goal
+Build a minimal bug tracker where teams can create projects, file issues, comment on them, and track status. Include authentication, a clean UI, and a well-structured Python backend.
+
+Core Requirements (MVP)
+Tech (required)
+●Backend: Python (FastAPI preferred; Flask or Django OK)
+
+●DB: PostgreSQL (SQLite acceptable for local dev) with migrations
+
+●Frontend: React (Vite or Next.js) or Vue
+
+●Auth: Email/password (JWT or session); signup + login + logout
+
+●Testing: At least a few meaningful unit/integration tests (backend)
+
+●Docs: Clear README with setup, run, test, and architectural notes
+
+●API Style: REST (JSON). CORS handled.
+
+User Roles
+●User: Can create/read/update issues they reported, comment, and view all issues in projects they belong to
+
+●Project Maintainer: Can update/assign/close any issue in their project, manage project membership
+
+Entities & Schema (suggested)
+●users (id, name, email, password_hash, created_at)
+
+●projects (id, name, key, description, created_at)
+
+●project_members (project_id, user_id, role) // member or maintainer
+
+●issues (id, project_id, title, description, status, priority, reporter_id, assignee_id, created_at, updated_at)
+
+○status: open | in_progress | resolved | closed
+
+○priority: low | medium | high | critical
+
+●comments (id, issue_id, author_id, body, created_at)
+
+Required Features
+1.Auth & Projects
+
+○Sign up, log in/out
+
+○Create a project (maintainer by default)
+
+○Invite/add members by email (no email send required—just a form)
+
+2.Issues
+
+○CRUD issues within a project
+
+○Filter & search (by status, priority, assignee, text search in title)
+
+○Sort by created_at / priority / status
+
+3.Issue Details
+
+○View thread with comments
+
+○Add comment
+
+○Change status & assignee (maintainers only)
+
+4.UX
+
+○Responsive, tidy UI; simple navigation: Projects → Issues → Issue Detail
+
+○Basic form validation and user feedback (spinners/toasts)
+
+
+API Contract (example)
+You can adapt, but document deviations.
+POST   /api/auth/signup                 {name,email,password}
+POST   /api/auth/login                  {email,password} -> {access_token}
+GET    /api/me                          -> user profile
+
+POST   /api/projects                    {name,key,description}
+GET    /api/projects                    -> list projects current user belongs to
+POST   /api/projects/{id}/members       {email, role}
+
+GET    /api/projects/{id}/issues        ?q=&status=&priority=&assignee=&sort=
+POST   /api/projects/{id}/issues        {title,description,priority,assignee_id}
+GET    /api/issues/{issue_id}
+PATCH  /api/issues/{issue_id}           {title?,description?,status?,priority?,assignee_id?}
+DELETE /api/issues/{issue_id}
+
+GET    /api/issues/{issue_id}/comments
+POST   /api/issues/{issue_id}/comments  {body}
+
+Auth: Bearer JWT in Authorization header or secure cookie.
+ Errors: Return structured errors {error: {code, message, details?}}.
+
+Frontend Pages (minimum)
+1.Login / Signup
+
+2.Projects List (create project)
+
+3.Project Detail → Issues List
+
+○Filters (status/priority/assignee), search box, sorting dropdown, pagination
+
+○“New Issue” modal/page
+
+4.Issue Detail
+
+○Metadata (status, priority, assignee, reporter, timestamps)
+
+○Comment thread and composer
+
+○Status/assignee controls (visible only to maintainers)
+
+
+Non-Functional Requirements
+●Security basics: hashed passwords (e.g., bcrypt/argon2), input validation (pydantic/WTForms), protected routes
+
+●Structure: clean modules, clear separation (routes/services/dao/models)
+
+●Migrations: Alembic/Django migrations
+
+●Seed script: optional script to create demo data (1–2 projects, 10–20 issues)
+
+
+
+
+
+
+
+
+What to Submit
+●GitHub repo link (public or invite us)
+
+●README with:
+
+○Tech choices & trade-offs
+
+○Setup instructions (env vars, DB, migrations)
+
+○How to run: backend, frontend, tests
+
+○Known limitations & what you’d do with more time
+
+●(Optional) Live URL + demo user credentials

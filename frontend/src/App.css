@@ -1,0 +1,10 @@
+#root {
+  margin: 0;
+  padding: 0;
+}
+
+/* Remove old demo styles */
+.logo,
+.read-the-docs {
+  display: none;
+}
