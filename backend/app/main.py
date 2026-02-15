@@ -32,6 +32,7 @@ app = FastAPI(
 origins = [
     "http://localhost:5173",
     "https://issuehub-vert.vercel.app",
+    "https://issuehub-nodryofjs-syed-zulfiqars-projects.vercel.app",
 ]
 
 app.add_middleware(
