@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+from typing import cast
 
 from app.core.dependencies import get_current_user, get_db
 from app.models.user import User
@@ -18,12 +19,14 @@ def create_project(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    current_user_id = cast(int, current_user.id)
     return projects_service.create_project(
         db=db,
         name=project.name,
         key=project.key,
         description=project.description,
-        creator_user_id=current_user.id,
+        start_date=project.start_date,
+        creator_user_id=current_user_id,
     )
 
 
@@ -35,7 +38,8 @@ def list_projects(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    return projects_service.list_projects(db, current_user.id)
+    current_user_id = cast(int, current_user.id)
+    return projects_service.list_projects(db, current_user_id)
 
 
 # -----------------------------
@@ -48,10 +52,11 @@ def add_member_to_project(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    current_user_id = cast(int, current_user.id)
     return projects_service.add_member_to_project(
         db=db,
         project_id=project_id,
-        request_user_id=current_user.id,
+        request_user_id=current_user_id,
         email=payload.email,
         role=payload.role
     )
@@ -66,7 +71,8 @@ def list_project_members(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    return projects_service.list_project_members(db, project_id, current_user.id)
+    current_user_id = cast(int, current_user.id)
+    return projects_service.list_project_members(db, project_id, current_user_id)
 
 
 # -----------------------------
@@ -78,4 +84,5 @@ def delete_project(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    return projects_service.delete_project(db, project_id, current_user.id)
+    current_user_id = cast(int, current_user.id)
+    return projects_service.delete_project(db, project_id, current_user_id)

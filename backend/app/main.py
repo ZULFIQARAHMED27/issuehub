@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from typing import cast
 
 from app.api.auth import router as auth_router
 from app.api.projects import router as projects_router
@@ -57,13 +58,28 @@ async def custom_http_exception_handler(request: Request, exc: HTTPException):
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    details = []
+    for err in exc.errors():
+        ctx = err.get("ctx")
+        if ctx:
+            err = {
+                **err,
+                "ctx": {
+                    key: (str(value) if isinstance(value, Exception) else value)
+                    for key, value in ctx.items()
+                },
+            }
+        details.append(err)
+
+    message = details[0].get("msg", "Invalid request data") if details else "Invalid request data"
+
     return JSONResponse(
         status_code=422,
         content={
             "error": {
                 "code": "VALIDATION_ERROR",
-                "message": "Invalid request data",
-                "details": exc.errors(),
+                "message": message,
+                "details": details,
             }
         },
     )
@@ -83,7 +99,10 @@ def me_alias(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    return auth_service.me(db, current_user.id, current_user.name, current_user.email)
+    current_user_id = cast(int, current_user.id)
+    current_user_name = cast(str, current_user.name)
+    current_user_email = cast(str, current_user.email)
+    return auth_service.me(db, current_user_id, current_user_name, current_user_email)
 
 
 # -------------------------

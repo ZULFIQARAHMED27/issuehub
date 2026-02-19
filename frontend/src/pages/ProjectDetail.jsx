@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../api/axios";
 import IssueTable from "../components/IssueTable";
@@ -49,30 +49,21 @@ export default function ProjectDetail() {
   };
   const isMaintainer = normalizeRole(project?.my_role) === "maintainer";
 
-  useEffect(() => {
-    fetchProject();
-    fetchMembers();
-  }, []);
-
-  const showToast = (message, type = "success") => {
+  const showToast = useCallback((message, type = "success") => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
-  };
+  }, []);
 
-  const handleApiError = (err, fallbackMessage) => {
+  const handleApiError = useCallback((err, fallbackMessage) => {
     if (err.response?.status === 401) {
       localStorage.removeItem("token");
       navigate("/login");
       return;
     }
     showToast(err.response?.data?.error?.message || fallbackMessage, "error");
-  };
+  }, [navigate, showToast]);
 
-  useEffect(() => {
-    fetchIssues();
-  }, [page, filters]);
-
-  const fetchProject = async () => {
+  const fetchProject = useCallback(async () => {
     try {
       const res = await api.get("/projects");
       const found = res.data.find((p) => p.id === parseInt(id));
@@ -80,18 +71,18 @@ export default function ProjectDetail() {
     } catch (err) {
       handleApiError(err, "Failed to load project");
     }
-  };
+  }, [handleApiError, id]);
 
-  const fetchMembers = async () => {
+  const fetchMembers = useCallback(async () => {
     try {
       const res = await api.get(`/projects/${id}/members`);
       setMembers(res.data);
     } catch (err) {
       handleApiError(err, "Failed to load members");
     }
-  };
+  }, [handleApiError, id]);
 
-  const fetchIssues = async () => {
+  const fetchIssues = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams({
@@ -113,7 +104,16 @@ export default function ProjectDetail() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters, handleApiError, id, page, pageSize]);
+
+  useEffect(() => {
+    fetchProject();
+    fetchMembers();
+  }, [fetchMembers, fetchProject]);
+
+  useEffect(() => {
+    fetchIssues();
+  }, [fetchIssues]);
 
   const handleFilterChange = (name, value) => {
     setPage(1);

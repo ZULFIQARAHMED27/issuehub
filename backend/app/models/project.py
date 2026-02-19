@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Column, Integer, String, Date, DateTime
 from datetime import datetime
 from app.db.base import Base
 
@@ -9,4 +9,5 @@ class Project(Base):
     name = Column(String, nullable=False)
     key = Column(String, unique=True, index=True, nullable=False)
     description = Column(String, nullable=True)
+    start_date = Column(Date, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)

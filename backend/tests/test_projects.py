@@ -1,5 +1,6 @@
 import pytest
 import uuid
+from datetime import date, timedelta
 from httpx import AsyncClient, ASGITransport
 from app.main import app
 
@@ -59,13 +60,58 @@ async def test_create_project_success():
             json={
                 "name": "Test Project",
                 "key": unique_key,
-                "description": "Test"
+                "description": "Test",
+                "start_date": "2026-02-01"
             },
         )
 
         assert response.status_code == 200
         data = response.json()
         assert data["name"] == "Test Project"
+        assert data["start_date"] == "2026-02-01"
+
+
+@pytest.mark.asyncio
+async def test_create_project_rejects_start_date_beyond_30_days():
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        unique_email = f"user_{uuid.uuid4().hex[:6]}@test.com"
+        unique_key = f"TP_{uuid.uuid4().hex[:6]}"
+
+        await ac.post(
+            "/api/auth/signup",
+            json={
+                "name": "Project User",
+                "email": unique_email,
+                "password": "password123"
+            },
+        )
+
+        login = await ac.post(
+            "/api/auth/login",
+            data={
+                "username": unique_email,
+                "password": "password123"
+            },
+        )
+
+        token = login.json()["access_token"]
+        invalid_start_date = (date.today() + timedelta(days=31)).isoformat()
+
+        response = await ac.post(
+            "/api/projects/",
+            headers={"Authorization": f"Bearer {token}"},
+            json={
+                "name": "Test Project",
+                "key": unique_key,
+                "description": "Test",
+                "start_date": invalid_start_date
+            },
+        )
+
+        assert response.status_code == 422
+        assert "Not allowed to select beyond 30 days from start date" in str(response.json())
 
 
 @pytest.mark.asyncio

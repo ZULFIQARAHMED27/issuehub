@@ -1,7 +1,13 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
 import Toast from "../components/Toast";
+
+const maxStartDate = (() => {
+  const d = new Date();
+  d.setDate(d.getDate() + 30);
+  return d.toISOString().split("T")[0];
+})();
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -14,19 +20,16 @@ export default function Dashboard() {
   const [form, setForm] = useState({
     name: "",
     key: "",
-    description: ""
+    description: "",
+    start_date: ""
   });
 
-  useEffect(() => {
-    fetchProjects();
-  }, []);
-
-  const showToast = (message, type = "success") => {
+  const showToast = useCallback((message, type = "success") => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
-  };
+  }, []);
 
-  const fetchProjects = async () => {
+  const fetchProjects = useCallback(async () => {
     try {
       setLoading(true);
       const [projectsRes, meRes] = await Promise.all([
@@ -40,14 +43,22 @@ export default function Dashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast]);
+
+  useEffect(() => {
+    fetchProjects();
+  }, [fetchProjects]);
 
   const handleCreateProject = async (e) => {
     e.preventDefault();
     try {
       setSubmitting(true);
-      await api.post("/projects", form);
-      setForm({ name: "", key: "", description: "" });
+      const payload = {
+        ...form,
+        start_date: form.start_date || null
+      };
+      await api.post("/projects", payload);
+      setForm({ name: "", key: "", description: "", start_date: "" });
       fetchProjects();
       showToast("Project created", "success");
     } catch (err) {
@@ -135,6 +146,15 @@ export default function Dashboard() {
             }
           />
 
+          <input
+            type="date"
+            value={form.start_date}
+            max={maxStartDate}
+            onChange={(e) =>
+              setForm({ ...form, start_date: e.target.value })
+            }
+          />
+
           <button type="submit" disabled={submitting}>
             {submitting ? "Creating..." : "Create"}
           </button>
@@ -173,6 +193,11 @@ export default function Dashboard() {
                 {project.description && (
                   <div style={{ fontSize: "13px", color: "#666" }}>
                     {project.description}
+                  </div>
+                )}
+                {project.start_date && (
+                  <div style={{ fontSize: "12px", color: "#888" }}>
+                    Start Date: {project.start_date}
                   </div>
                 )}
               </div>

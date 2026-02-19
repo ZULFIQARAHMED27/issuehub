@@ -59,12 +59,14 @@ async def test_create_project_success():
             json={
                 "name": "Test Project",
                 "key": unique_key,
-                "description": "Test"
+                "description": "Test",
+                "start_date": "2026-02-01"
             },
         )
 
         assert response.status_code == 200
         data = response.json()
         assert data["name"] == "Test Project"
+        assert data["start_date"] == "2026-02-01"
 
 

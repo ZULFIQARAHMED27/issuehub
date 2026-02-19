@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../api/axios";
 import StatusBadge from "../components/StatusBadge";
@@ -23,28 +23,21 @@ export default function IssueDetail() {
     priority: "medium"
   });
 
-  useEffect(() => {
-    fetchIssue();
-    fetchComments();
-    fetchMembers();
-    fetchMe();
-  }, []);
-
-  const showToast = (message, type = "success") => {
+  const showToast = useCallback((message, type = "success") => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
-  };
+  }, []);
 
-  const handleApiError = (err, fallbackMessage) => {
+  const handleApiError = useCallback((err, fallbackMessage) => {
     if (err.response?.status === 401) {
       localStorage.removeItem("token");
       navigate("/login");
       return;
     }
     showToast(err.response?.data?.error?.message || fallbackMessage, "error");
-  };
+  }, [navigate, showToast]);
 
-  const fetchIssue = async () => {
+  const fetchIssue = useCallback(async () => {
     try {
       const res = await api.get(`/issues/${issueId}`);
       setIssue(res.data);
@@ -58,34 +51,41 @@ export default function IssueDetail() {
       setInitialLoadFailed(true);
       handleApiError(err, "Failed to load issue");
     }
-  };
+  }, [handleApiError, issueId]);
 
-  const fetchComments = async () => {
+  const fetchComments = useCallback(async () => {
     try {
       const res = await api.get(`/issues/${issueId}/comments`);
       setComments(res.data);
     } catch (err) {
       handleApiError(err, "Failed to load comments");
     }
-  };
+  }, [handleApiError, issueId]);
 
-  const fetchMembers = async () => {
+  const fetchMembers = useCallback(async () => {
     try {
       const res = await api.get(`/projects/${projectId}/members`);
       setMembers(res.data);
     } catch (err) {
       handleApiError(err, "Failed to load members");
     }
-  };
+  }, [handleApiError, projectId]);
 
-  const fetchMe = async () => {
+  const fetchMe = useCallback(async () => {
     try {
       const res = await api.get("/me");
       setCurrentUser(res.data);
     } catch (err) {
       handleApiError(err, "Failed to load current user");
     }
-  };
+  }, [handleApiError]);
+
+  useEffect(() => {
+    fetchIssue();
+    fetchComments();
+    fetchMembers();
+    fetchMe();
+  }, [fetchComments, fetchIssue, fetchMe, fetchMembers]);
 
   const normalizeRole = (role) => {
     if (!role) return "";

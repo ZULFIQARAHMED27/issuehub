@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from datetime import date
 
 from app.models.project import Project
 from app.models.project_member import ProjectMember
@@ -15,8 +16,19 @@ def get_project_by_id(db: Session, project_id: int):
     return db.query(Project).filter(Project.id == project_id).first()
 
 
-def create_project(db: Session, name: str, key: str, description: str | None):
-    project = Project(name=name, key=key, description=description)
+def create_project(
+    db: Session,
+    name: str,
+    key: str,
+    description: str | None,
+    start_date: date | None,
+):
+    project = Project(
+        name=name,
+        key=key,
+        description=description,
+        start_date=start_date,
+    )
     db.add(project)
     db.commit()
     db.refresh(project)
